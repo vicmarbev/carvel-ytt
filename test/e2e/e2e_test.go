@@ -25,6 +25,35 @@ func TestCheckStdInReading(t *testing.T) {
 	require.Equal(t, string(expectedFileOutput), actualOutput)
 }
 
+/*func TestCheckDataValuesStdInReading(t *testing.T) {
+flags := yttFlags{
+	{"--data-values-file": "-"},
+}
+/*	actualOutput := runYtt(t, nil, "../../examples/eirini/values.yml", flags, nil)
+	expectedFileOutput, err := ioutil.ReadFile("../../examples/eirini/output.yml")
+	require.NoError(t, err)
+	require.Equal(t, string(expectedFileOutput), actualOutput)*/
+/*	actualOutput := runYtt(t, nil, "../../examples/eirini/values.yml", flags, nil)
+
+	expectedFileOutput, err := ioutil.ReadFile("../../examples/eirini/output.yml")
+	require.NoError(t, err)
+	require.Equal(t, string(expectedFileOutput), actualOutput)
+}
+func TestDataValuesFileWithStdin(t *testing.T) {
+
+	t.Run("--data-values-file with stdin", func(t *testing.T) {
+		flags := yttFlags{
+			{"--data-values-file": "-"},
+		}
+		actualOutput := runYtt(t, []string{}, "../../examples/eirini/values.yml", flags, nil)
+		expectedOutput := `svc_port: 80
+app_port: 80
+hello_msg: stranger
+`
+		require.Equal(t, expectedOutput, actualOutput)
+	})
+
+}*/
 func TestSanityCheckTemplateWithDataValues(t *testing.T) {
 	t.Run("template file with data value", func(t *testing.T) {
 		actualOutput := runYtt(t, []string{"../../examples/eirini/config.yml", "../../examples/eirini/input.yml"}, "", nil, nil)
@@ -193,7 +222,7 @@ func TestDataValues(t *testing.T) {
 			{"--data-value": "int=123"},
 			{"--data-value": "float=123.123"},
 		}
-		actualOutput := runYtt(t, testInputFiles{"../../examples/data-values/config.yml", "../../examples/data-values/values.yml"}, "", flags, nil)
+		actualOutput := runYtt(t, testInputFiles{"../../examples/data-values/config.yml", "-"}, "../../examples/data-values/values.yml", flags, nil)
 		expectedOutput := `nothing: "null"
 string: str
 bool: "true"
@@ -460,6 +489,7 @@ func runYtt(t *testing.T, files testInputFiles, stdinFileName string, flags yttF
 		require.NoError(t, err)
 		command.Stdin = fileToUseInStdIn
 	}
+
 	output, err := command.Output()
 	require.NoError(t, err, stdError.String())
 

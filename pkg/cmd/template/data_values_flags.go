@@ -5,6 +5,8 @@ package template
 
 import (
 	"fmt"
+	"github.com/k14s/ytt/pkg/cmd/ui"
+	"github.com/k14s/ytt/pkg/files"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -38,6 +40,7 @@ type DataValuesFlags struct {
 
 	EnvironFunc  func() []string
 	ReadFileFunc func(string) ([]byte, error)
+	files.SymlinkAllowOpts
 }
 
 func (s *DataValuesFlags) Set(cmd *cobra.Command) {
@@ -62,11 +65,84 @@ type dataValuesFlagsSource struct {
 
 type valueTransformFunc func(string) (interface{}, error)
 
+type DataValuesFilesSource struct {
+	opts DataValuesFlags
+	ui   ui.UI
+}
+
+func NewDataValuesFilesSource(opts DataValuesFlags, ui ui.UI) *DataValuesFilesSource {
+	return &DataValuesFilesSource{opts, ui}
+}
+
+func (s *DataValuesFilesSource) HasInput() bool { return len(s.opts.FromFiles) > 0 }
+
+func (s *DataValuesFilesSource) HasOutput() bool { return true }
+
+func (s *DataValuesFilesSource) Input() (Input, error) {
+	filesToProcess, err := files.NewSortedFilesFromPaths(s.opts.FromFiles, s.opts.SymlinkAllowOpts)
+	if err != nil {
+		return Input{}, err
+	}
+	return Input{Files: filesToProcess}, nil
+}
+
+func (s *DataValuesFilesSource) Output(out Output) error {
+	if out.Err != nil {
+		return out.Err
+	}
+
+	/*nonYamlFileNames := []string{}
+		switch {
+		case len(s.opts) > 0:
+			return files.NewOutputDirectory(s.opts.outputDir, out.Files, s.ui).Write()
+		case len(s.opts.OutputFiles) > 0:
+			return files.NewOutputDirectory(s.opts.OutputFiles, out.Files, s.ui).WriteFiles()
+		default:
+			for _, file := range out.Files {
+				if file.Type() != files.TypeYAML {
+					nonYamlFileNames = append(nonYamlFileNames, file.RelativePath())
+				}
+			}
+		}
+
+		var printerFunc func(io.Writer) yamlmeta.DocumentPrinter
+
+		outputType, err := s.opts.OutputType.Format()
+		if err != nil {
+			return err
+		}
+
+		switch outputType {
+		case RegularFilesOutputTypeYAML:
+			printerFunc = nil
+		case RegularFilesOutputTypeJSON:
+			printerFunc = func(w io.Writer) yamlmeta.DocumentPrinter { return yamlmeta.NewJSONPrinter(w) }
+		case RegularFilesOutputTypePos:
+			printerFunc = func(w io.Writer) yamlmeta.DocumentPrinter {
+				return yamlmeta.WrappedFilePositionPrinter{yamlmeta.NewFilePositionPrinter(w)}
+			}
+		}
+
+		combinedDocBytes, err := out.DocSet.AsBytesWithPrinter(printerFunc)
+		if err != nil {
+			return fmt.Errorf("Marshaling combined template result: %s", err)
+		}
+
+		s.ui.Debugf("### result\n")
+		s.ui.Printf("%s", combinedDocBytes) // no newline
+
+		if len(nonYamlFileNames) > 0 {
+			s.ui.Warnf("\n" + `Warning: Found Non-YAML templates in input. Non-YAML templates are not rendered to standard output.
+	If you want to include those results, use the --output-files or --dangerous-emptied-output-directory flag.` + "\n")
+		}*/
+	return nil
+}
+
 // AsOverlays generates Data Values overlays, one for each setting in this DataValuesFlags.
 //
 // Returns a collection of overlays targeted for the root library and a separate collection of overlays "addressed" to
 // children libraries.
-func (s *DataValuesFlags) AsOverlays(strict bool) ([]*datavalues.Envelope, []*datavalues.Envelope, error) {
+func (s *DataValuesFlags) AsOverlays(strict bool, ds *DataValuesFilesSource) ([]*datavalues.Envelope, []*datavalues.Envelope, error) {
 	plainValFunc := func(rawVal string) (interface{}, error) { return rawVal, nil }
 
 	yamlValFunc := func(rawVal string) (interface{}, error) {

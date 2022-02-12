@@ -28,6 +28,7 @@ type Options struct {
 	RegularFilesSourceOpts RegularFilesSourceOpts
 	FileMarksOpts          FileMarksOpts
 	DataValuesFlags        DataValuesFlags
+	DataValuesFilesSource  DataValuesFilesSource
 }
 
 type Input struct {
@@ -49,7 +50,7 @@ type FileSource interface {
 	Output(Output) error
 }
 
-var _ []FileSource = []FileSource{&BulkFilesSource{}, &RegularFilesSource{}}
+var _ []FileSource = []FileSource{&BulkFilesSource{}, &RegularFilesSource{}, &DataValuesFilesSource{}}
 
 func NewOptions() *Options {
 	return &Options{}
@@ -88,6 +89,7 @@ func (o *Options) Run() error {
 	srcs := []FileSource{
 		NewBulkFilesSource(o.BulkFilesSourceOpts, ui),
 		NewRegularFilesSource(o.RegularFilesSourceOpts, ui),
+		NewDataValuesFilesSource(o.DataValuesFlags, ui),
 	}
 
 	in, err := o.pickSource(srcs, func(s FileSource) bool { return s.HasInput() }).Input()
@@ -114,7 +116,7 @@ func (o *Options) RunWithFiles(in Input, ui ui.UI) Output {
 		return o.inspectFiles(rootLibrary)
 	}
 
-	valuesOverlays, libraryValuesOverlays, err := o.DataValuesFlags.AsOverlays(o.StrictYAML)
+	valuesOverlays, libraryValuesOverlays, err := o.DataValuesFlags.AsOverlays(o.StrictYAML, &o.DataValuesFilesSource)
 	if err != nil {
 		return Output{Err: err}
 	}
