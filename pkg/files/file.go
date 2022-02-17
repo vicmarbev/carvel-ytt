@@ -67,6 +67,7 @@ func NewSortedFilesFromPaths(paths []string, opts SymlinkAllowOpts) ([]*File, er
 			if len(relativePath) > 0 {
 				file.MarkRelativePath(relativePath)
 			}
+			//	fmt.Printf("\n***file.go %+v", file)
 			files = append(files, file)
 
 		case strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://"):

@@ -79,7 +79,10 @@ func (s *DataValuesFilesSource) HasInput() bool { return len(s.opts.FromFiles) >
 func (s *DataValuesFilesSource) HasOutput() bool { return true }
 
 func (s *DataValuesFilesSource) Input() (Input, error) {
+
+	//	fmt.Printf("**83*DataValuesFilesSource Input :%+v", s.opts.FromFiles)
 	filesToProcess, err := files.NewSortedFilesFromPaths(s.opts.FromFiles, s.opts.SymlinkAllowOpts)
+	//	fmt.Printf("**85*DataValuesFilesSource Input %+v", filesToProcess)
 	if err != nil {
 		return Input{}, err
 	}
@@ -142,8 +145,12 @@ func (s *DataValuesFilesSource) Output(out Output) error {
 //
 // Returns a collection of overlays targeted for the root library and a separate collection of overlays "addressed" to
 // children libraries.
-func (s *DataValuesFlags) AsOverlays(strict bool, ds *DataValuesFilesSource) ([]*datavalues.Envelope, []*datavalues.Envelope, error) {
+
+func (s *DataValuesFlags) AsOverlays(strict bool, ds *DataValuesFlags, dsrc *DataValuesFilesSource) ([]*datavalues.Envelope, []*datavalues.Envelope, error) {
 	plainValFunc := func(rawVal string) (interface{}, error) { return rawVal, nil }
+
+	//	fmt.Printf("**in AsOverlays: %+v", ds.FromFiles)
+	//TODO extract the stdin contents
 
 	yamlValFunc := func(rawVal string) (interface{}, error) {
 		val, err := s.parseYAML(rawVal, strict)
@@ -157,7 +164,13 @@ func (s *DataValuesFlags) AsOverlays(strict bool, ds *DataValuesFilesSource) ([]
 
 	// Files go first
 	for _, file := range s.FromFiles {
+		/*	fmt.Printf("\n$$$in AsOverlays166 :%+v", file)
+			fmt.Printf("\n$$$in AsOverlays167 :%+v", ds.FromFiles)
+			fmt.Printf("\n$$$in AsOverlays168 :%+v", s.FromFiles)
+			fmt.Printf("\n$$$in AsOverlays169 :%+v", dsrc.opts.FromFiles)
+		*/
 		vals, err := s.file(file, strict)
+
 		if err != nil {
 			return nil, nil, fmt.Errorf("Extracting data value from file: %s", err)
 		}

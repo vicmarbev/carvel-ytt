@@ -75,6 +75,7 @@ func NewCmd(o *Options) *cobra.Command {
 	o.RegularFilesSourceOpts.Set(cmd)
 	o.FileMarksOpts.Set(cmd)
 	o.DataValuesFlags.Set(cmd)
+	//	o.DataValuesFilesSource.Set(cmd)
 	return cmd
 }
 
@@ -116,7 +117,7 @@ func (o *Options) RunWithFiles(in Input, ui ui.UI) Output {
 		return o.inspectFiles(rootLibrary)
 	}
 
-	valuesOverlays, libraryValuesOverlays, err := o.DataValuesFlags.AsOverlays(o.StrictYAML, &o.DataValuesFilesSource)
+	valuesOverlays, libraryValuesOverlays, err := o.DataValuesFlags.AsOverlays(o.StrictYAML, &o.DataValuesFlags, &o.DataValuesFilesSource)
 	if err != nil {
 		return Output{Err: err}
 	}

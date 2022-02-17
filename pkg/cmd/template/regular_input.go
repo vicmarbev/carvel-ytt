@@ -37,7 +37,6 @@ type OutputType struct {
 // RegularFilesSourceOpts to be set when the corresponding cobra.Command is executed.
 func (s *RegularFilesSourceOpts) Set(cmd *cobra.Command) {
 	cmd.Flags().StringArrayVarP(&s.files, "file", "f", nil, "File (ie local path, HTTP URL, -) (can be specified multiple times)")
-
 	cmd.Flags().StringVar(&s.outputDir, "dangerous-emptied-output-directory", "",
 		"Delete given directory, and then create it with output files")
 	cmd.Flags().StringVar(&s.OutputFiles, "output-files", "", "Add output files to given directory")
@@ -66,6 +65,7 @@ func (s *RegularFilesSource) HasInput() bool  { return len(s.opts.files) > 0 }
 func (s *RegularFilesSource) HasOutput() bool { return true }
 
 func (s *RegularFilesSource) Input() (Input, error) {
+	//	fmt.Printf("***in RegularFilesSources Input :%+v", s.opts.files)
 	filesToProcess, err := files.NewSortedFilesFromPaths(s.opts.files, s.opts.SymlinkAllowOpts)
 	if err != nil {
 		return Input{}, err
