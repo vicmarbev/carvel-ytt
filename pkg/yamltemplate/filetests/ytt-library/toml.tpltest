@@ -59,10 +59,10 @@ decode:
   test1: {}
   test2:
     a:
-    - 1
-    - 2
-    - 3
-    - 456
+      - 1
+      - 2
+      - 3
+      - 456
     b: str
   test3:
     stuff:
