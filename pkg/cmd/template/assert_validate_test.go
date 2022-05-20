@@ -123,6 +123,37 @@ array:
 
 			assertSucceedsDocSet(t, filesToProcess, expected, opts)
 		})
+		t.Run("using the min_len kwarg", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate min_len=1
+string: "example"
+#@assert/validate min_len=3
+cow: "cat"
+#@assert/validate min_len=1
+array:
+- example
+#@assert/validate min_len=1
+map:
+ foo: bar
+`
+
+			expected := `string: example
+cow: cat
+array:
+- example
+map:
+  foo: bar
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
 	})
 	t.Run("when validations on library data values pass", func(t *testing.T) {
 		opts := cmdtpl.NewOptions()

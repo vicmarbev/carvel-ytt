@@ -16,9 +16,10 @@ var (
 		"assert": &starlarkstruct.Module{
 			Name: "assert",
 			Members: starlark.StringDict{
-				"equals": starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
-				"fail":   starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
-				"try_to": starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
+				"equals":                         starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
+				"fail":                           starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
+				"try_to":                         starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
+				//"min_length": /*extract in var */ starlark.NewBuiltin("assert.min_len", core.ErrWrapper(assertModule{}.MinLength)),
 			},
 		},
 	}
@@ -100,4 +101,42 @@ func (b assertModule) TryTo(thread *starlark.Thread, f *starlark.Builtin, args s
 		return starlark.Tuple{starlark.None, starlark.String(err.Error())}, nil
 	}
 	return starlark.Tuple{retVal, starlark.None}, nil
+}
+
+//func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+//	//do we need two values here?
+//	if args.Len() != 1 {
+//		return starlark.None, fmt.Errorf("expected exactly one argument")
+//	}
+//
+//	//convert string function to
+//	return starlark.None, nil
+//}
+func NewMinLengthStarlarkFunc(minLength int) core.StarlarkFunc {
+	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if args.Len() != 1 {
+			return starlark.None, fmt.Errorf("expected exactly one argument")
+		}
+		val := args[0]
+		seq, isSequence := val.(starlark.Sequence)
+		simple, isIndexable := val.(starlark.Indexable)
+
+		if !isSequence && !isIndexable {
+			return starlark.None, fmt.Errorf("expected something that had length")
+		}
+
+		if isSequence && seq.Len() >= minLength {
+			return starlark.None, nil
+		} else if isIndexable && simple.Len() >= minLength {
+			return starlark.None, nil
+		} else {
+			return starlark.None, fmt.Errorf("length of value was less than %v", minLength)
+		}
+
+	}
+}
+func NewAssertMinLength(minLength int) starlark.Callable {
+
+	return starlark.NewBuiltin("assert.min_len", core.ErrWrapper(NewMinLengthStarlarkFunc(minLength)))
+
 }

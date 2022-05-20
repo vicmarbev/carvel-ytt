@@ -5,11 +5,11 @@ package validations
 
 import (
 	"fmt"
-
 	"github.com/k14s/starlark-go/starlark"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/filepos"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/yamltemplate"
+	"github.com/vmware-tanzu/carvel-ytt/pkg/yttlibrary"
 )
 
 // NodeValidation represents a validation attached to a Node via an annotation.
@@ -30,6 +30,8 @@ type rule struct {
 type validationKwargs struct {
 	when         *starlark.Callable
 	whenNullSkip *bool // default: nil if kwarg is not set, True if value is Nullable
+	minLength    int // 0 len("") == 0, this always passes
+	// *int , default=nil possible_values={&1, &2, &-3, ..}
 }
 
 // Run takes a root Node, and threadName, and validates each Node in the tree.
@@ -141,6 +143,18 @@ func (v validationKwargs) shouldValidate(value starlark.Value, thread *starlark.
 	}
 	// if no kwargs then execute rules
 	return true, nil
+}
+
+func (v validationKwargs) convertToRules() *rule {
+	if min := v.minLength; min > 0 {
+		a := yttlibrary.NewAssertMinLength(min)
+		return &rule{
+			msg:       fmt.Sprintf("length greater or equal to %v", min),
+			assertion: a,
+		}
+	}
+
+	return nil
 }
 
 // AssertCheck holds the resulting violations from executing Validations on a node.
