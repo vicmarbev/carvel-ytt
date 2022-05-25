@@ -198,3 +198,20 @@ func newMaxStarlarkFunc(max int) core.StarlarkFunc {
 func NewAssertMax(max int) starlark.Callable {
 	return starlark.NewBuiltin("assert.max", core.ErrWrapper(newMaxStarlarkFunc(max)))
 }
+
+func newNotNullStarlarkFunc() core.StarlarkFunc {
+	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if args.Len() != 1 {
+			return starlark.None, fmt.Errorf("expected exactly one argument")
+		}
+		_, ok := args[0].(starlark.NoneType)
+		if ok {
+			return starlark.None, fmt.Errorf("value was null")
+		}
+
+		return starlark.None, nil
+	}
+}
+func NewAssertNotNull() starlark.Callable {
+	return starlark.NewBuiltin("assert.not_null", core.ErrWrapper(newNotNullStarlarkFunc()))
+}

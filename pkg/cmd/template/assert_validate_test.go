@@ -248,6 +248,29 @@ map:
 
 				assertSucceedsDocSet(t, filesToProcess, expected, opts)
 			})
+			t.Run("when_null_skip", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
+---
+#@assert/validate not_null=True
+string: ""
+array:
+#@assert/validate not_null=True
+-  0
+`
+
+				expected := `string: ""
+array:
+- 0
+`
+
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
+
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
 		})
 	})
 	t.Run("when validations on library data values pass", func(t *testing.T) {

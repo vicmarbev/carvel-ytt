@@ -34,6 +34,7 @@ type validationKwargs struct {
 	maxLength    *int
 	min          int
 	max          *int
+	notNull      bool
 	// *int , default=nil possible_values={&1, &2, &-3, ..}
 }
 
@@ -175,6 +176,13 @@ func (v validationKwargs) convertToRules() []rule {
 		a := yttlibrary.NewAssertMax(*v.max)
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("a value less than or equal to %v", *v.max),
+			assertion: a,
+		})
+	}
+	if v.notNull {
+		a := yttlibrary.NewAssertNotNull()
+		rules = append(rules, rule{
+			msg:       fmt.Sprintf("a value less that is not null"),
 			assertion: a,
 		})
 	}
