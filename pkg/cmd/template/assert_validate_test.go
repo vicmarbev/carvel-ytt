@@ -66,10 +66,11 @@ my_map:
 
 			assertSucceedsDocSet(t, filesToProcess, expected, opts)
 		})
-		t.Run("using the when kwarg", func(t *testing.T) {
-			opts := cmdtpl.NewOptions()
-			opts.DataValuesFlags.Inspect = true
-			dataValuesYAML := `#@data/values
+		t.Run("with kwargs", func(t *testing.T) {
+			t.Run("when", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
 #@ def failAssert(v):
 #@ return False
 #@ end
@@ -85,21 +86,21 @@ array:
 -  1
 `
 
-			expected := `string: example
+				expected := `string: example
 array:
 - 1
 `
 
-			filesToProcess := files.NewSortedFiles([]*files.File{
-				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
-			})
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
 
-			assertSucceedsDocSet(t, filesToProcess, expected, opts)
-		})
-		t.Run("using the when_null_skip kwarg", func(t *testing.T) {
-			opts := cmdtpl.NewOptions()
-			opts.DataValuesFlags.Inspect = true
-			dataValuesYAML := `#@data/values
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
+			t.Run("when_null_skip", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
 #@ def failAssert(v):
 #@ return False
 #@ end
@@ -112,21 +113,21 @@ array:
 -  null
 `
 
-			expected := `string: null
+				expected := `string: null
 array:
 - null
 `
 
-			filesToProcess := files.NewSortedFiles([]*files.File{
-				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
-			})
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
 
-			assertSucceedsDocSet(t, filesToProcess, expected, opts)
-		})
-		t.Run("using the min_len kwarg", func(t *testing.T) {
-			opts := cmdtpl.NewOptions()
-			opts.DataValuesFlags.Inspect = true
-			dataValuesYAML := `#@data/values
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
+			t.Run("min_len", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
 ---
 #@assert/validate min_len=1
 string: "example"
@@ -140,7 +141,7 @@ map:
  foo: bar
 `
 
-			expected := `string: example
+				expected := `string: example
 cow: cat
 array:
 - example
@@ -148,11 +149,105 @@ map:
   foo: bar
 `
 
-			filesToProcess := files.NewSortedFiles([]*files.File{
-				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
-			})
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
 
-			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
+			t.Run("max_len", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
+---
+#@assert/validate max_len=10
+string: "example"
+#@assert/validate max_len=3
+cow: "cat"
+#@assert/validate max_len=1
+array:
+- example
+#@assert/validate max_len=1
+map:
+ foo: bar
+`
+
+				expected := `string: example
+cow: cat
+array:
+- example
+map:
+  foo: bar
+`
+
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
+
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
+			t.Run("min", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
+---
+#@assert/validate min=10
+string: 100
+#@assert/validate min=3
+cow: 3
+array:
+#@assert/validate min=1
+- 1.3
+map:
+  #@assert/validate min=1
+  foo: 2
+`
+
+				expected := `string: 100
+cow: 3
+array:
+- 1.3
+map:
+  foo: 2
+`
+
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
+
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
+			t.Run("max", func(t *testing.T) {
+				opts := cmdtpl.NewOptions()
+				opts.DataValuesFlags.Inspect = true
+				dataValuesYAML := `#@data/values
+---
+#@assert/validate max=10
+string: 7
+#@assert/validate max=3
+cow: 3
+array:
+#@assert/validate max=1.5
+- 1
+map:
+  #@assert/validate max=1
+  foo: 0
+`
+
+				expected := `string: 7
+cow: 3
+array:
+- 1
+map:
+  foo: 0
+`
+
+				filesToProcess := files.NewSortedFiles([]*files.File{
+					files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(dataValuesYAML))),
+				})
+
+				assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			})
 		})
 	})
 	t.Run("when validations on library data values pass", func(t *testing.T) {

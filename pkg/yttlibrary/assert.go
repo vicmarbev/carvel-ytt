@@ -16,9 +16,9 @@ var (
 		"assert": &starlarkstruct.Module{
 			Name: "assert",
 			Members: starlark.StringDict{
-				"equals":                         starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
-				"fail":                           starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
-				"try_to":                         starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
+				"equals": starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
+				"fail":   starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
+				"try_to": starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
 				//"min_length": /*extract in var */ starlark.NewBuiltin("assert.min_len", core.ErrWrapper(assertModule{}.MinLength)),
 			},
 		},
@@ -112,31 +112,89 @@ func (b assertModule) TryTo(thread *starlark.Thread, f *starlark.Builtin, args s
 //	//convert string function to
 //	return starlark.None, nil
 //}
-func NewMinLengthStarlarkFunc(minLength int) core.StarlarkFunc {
+
+func newMinLengthStarlarkFunc(minLength int) core.StarlarkFunc {
+	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if args.Len() != 1 {
+			return starlark.None, fmt.Errorf("expected exactly one argument")
+		}
+		valLen := starlark.Len(args[0])
+		if valLen < 0 {
+			return starlark.None, fmt.Errorf("expected something that had length")
+		}
+		if valLen >= minLength {
+			return starlark.None, nil
+		} else {
+			return starlark.None, fmt.Errorf("length of value was less than %v", minLength)
+		}
+	}
+}
+func NewAssertMinLength(minLength int) starlark.Callable {
+	return starlark.NewBuiltin("assert.min_len", core.ErrWrapper(newMinLengthStarlarkFunc(minLength)))
+}
+
+func newMaxLengthStarlarkFunc(maxLength int) core.StarlarkFunc {
+	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if args.Len() != 1 {
+			return starlark.None, fmt.Errorf("expected exactly one argument")
+		}
+		valLen := starlark.Len(args[0])
+		if valLen < 0 {
+			return starlark.None, fmt.Errorf("expected something that had length")
+		}
+		if valLen <= maxLength {
+			return starlark.None, nil
+		} else {
+			return starlark.None, fmt.Errorf("length of value was less than %v", maxLength)
+		}
+	}
+}
+func NewAssertMaxLength(maxLength int) starlark.Callable {
+	return starlark.NewBuiltin("assert.max_len", core.ErrWrapper(newMaxLengthStarlarkFunc(maxLength)))
+}
+
+func newMinStarlarkFunc(min int) core.StarlarkFunc {
 	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		if args.Len() != 1 {
 			return starlark.None, fmt.Errorf("expected exactly one argument")
 		}
 		val := args[0]
-		seq, isSequence := val.(starlark.Sequence)
-		simple, isIndexable := val.(starlark.Indexable)
-
-		if !isSequence && !isIndexable {
-			return starlark.None, fmt.Errorf("expected something that had length")
+		v, err := starlark.NumberToInt(val)
+		if err != nil {
+			return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
 		}
-
-		if isSequence && seq.Len() >= minLength {
-			return starlark.None, nil
-		} else if isIndexable && simple.Len() >= minLength {
+		num, _ := v.Int64()
+		intNum := int(num)
+		if intNum >= min {
 			return starlark.None, nil
 		} else {
-			return starlark.None, fmt.Errorf("length of value was less than %v", minLength)
+			return starlark.None, fmt.Errorf("value was less than %v", min)
 		}
-
 	}
 }
-func NewAssertMinLength(minLength int) starlark.Callable {
+func NewAssertMin(min int) starlark.Callable {
+	return starlark.NewBuiltin("assert.min", core.ErrWrapper(newMinStarlarkFunc(min)))
+}
 
-	return starlark.NewBuiltin("assert.min_len", core.ErrWrapper(NewMinLengthStarlarkFunc(minLength)))
-
+func newMaxStarlarkFunc(max int) core.StarlarkFunc {
+	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if args.Len() != 1 {
+			return starlark.None, fmt.Errorf("expected exactly one argument")
+		}
+		val := args[0]
+		v, err := starlark.NumberToInt(val)
+		if err != nil {
+			return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
+		}
+		num, _ := v.Int64()
+		intNum := int(num)
+		if intNum <= max {
+			return starlark.None, nil
+		} else {
+			return starlark.None, fmt.Errorf("length of value was less than %v", max)
+		}
+	}
+}
+func NewAssertMax(max int) starlark.Callable {
+	return starlark.NewBuiltin("assert.max", core.ErrWrapper(newMaxStarlarkFunc(max)))
 }

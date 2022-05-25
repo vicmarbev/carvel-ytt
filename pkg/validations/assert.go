@@ -18,6 +18,9 @@ const (
 	ValidationKwargWhen         string                  = "when"
 	ValidationKwargWhenNullSkip string                  = "when_null_skip"
 	ValidationKwargMinLength    string                  = "min_len"
+	ValidationKwargMaxLength    string                  = "max_len"
+	ValidationKwargMin          string                  = "min"
+	ValidationKwargMax          string                  = "max"
 )
 
 // ProcessAssertValidateAnns checks Assert annotations on data values and stores them on a Node as Validations.
@@ -61,9 +64,9 @@ func (a *convertAssertAnnsToValidations) Visit(node yamlmeta.Node) error {
 func NewValidationFromValidationAnnotation(annotation template.NodeAnnotation) (*NodeValidation, error) {
 	var rules []rule
 	// TODO: what makes a malformed annotation??
-	//if len(annotation.Args) == 0 {
-	//	return nil, fmt.Errorf("expected annotation to have 2-tuple as argument(s), but found no arguments (by %s)", annotation.Position.AsCompactString())
-	//}
+	if len(annotation.Args) == 0 && len(annotation.Kwargs) == 0 {
+		return nil, fmt.Errorf("expected annotation to have 2-tuple as argument(s), but found no arguments (by %s)", annotation.Position.AsCompactString())
+	}
 	for _, arg := range annotation.Args {
 		ruleTuple, ok := arg.(starlark.Tuple)
 		if !ok {
@@ -90,7 +93,7 @@ func NewValidationFromValidationAnnotation(annotation template.NodeAnnotation) (
 		return nil, err
 	}
 
-	rules = append(rules, *kwargs.convertToRules())
+	rules = append(rules, kwargs.convertToRules()...)
 
 	return &NodeValidation{rules, kwargs, annotation.Position}, nil
 }
@@ -116,16 +119,35 @@ func newValidationKwargs(kwargs []starlark.Tuple, annPos *filepos.Position) (val
 			b := bool(v)
 			processedKwargs.whenNullSkip = &b
 		case ValidationKwargMinLength:
-			ten, ok := value[1].(starlark.Int)
-			if !ok {
-				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be an integer, but was %s (at %s)", ValidationKwargMinLength, value[1].Type(), annPos.AsCompactString())
+			v, err := starlark.NumberToInt(value[1])
+			if err != nil {
+				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be a number, but was %s (at %s)", ValidationKwargMinLength, value[1].Type(), annPos.AsCompactString())
 			}
-			//now what?
-			// 1. we can convert to function right now
-			// or
-			// 2. we can pass along an int and deal with it later...
-			num, _ := ten.Int64()
+			num, _ := v.Int64()
 			processedKwargs.minLength = int(num)
+		case ValidationKwargMaxLength:
+			v, err := starlark.NumberToInt(value[1])
+			if err != nil {
+				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be a number, but was %s (at %s)", ValidationKwargMaxLength, value[1].Type(), annPos.AsCompactString())
+			}
+			num, _ := v.Int64()
+			intNum := int(num)
+			processedKwargs.maxLength = &intNum
+		case ValidationKwargMin:
+			v, err := starlark.NumberToInt(value[1])
+			if err != nil {
+				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be an number, but was %s (at %s)", ValidationKwargMin, value[1].Type(), annPos.AsCompactString())
+			}
+			num, _ := v.Int64()
+			processedKwargs.min = int(num)
+		case ValidationKwargMax:
+			v, err := starlark.NumberToInt(value[1])
+			if err != nil {
+				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be an number, but was %s (at %s)", ValidationKwargMax, value[1].Type(), annPos.AsCompactString())
+			}
+			num, _ := v.Int64()
+			intNum := int(num)
+			processedKwargs.max = &intNum
 		default:
 			return validationKwargs{}, fmt.Errorf("unknown keyword argument %q (at %s)", kwargName, annPos.AsCompactString())
 		}

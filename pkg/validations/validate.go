@@ -30,7 +30,10 @@ type rule struct {
 type validationKwargs struct {
 	when         *starlark.Callable
 	whenNullSkip *bool // default: nil if kwarg is not set, True if value is Nullable
-	minLength    int // 0 len("") == 0, this always passes
+	minLength    int   // 0 len("") == 0, this always passes
+	maxLength    *int
+	min          int
+	max          *int
 	// *int , default=nil possible_values={&1, &2, &-3, ..}
 }
 
@@ -145,16 +148,38 @@ func (v validationKwargs) shouldValidate(value starlark.Value, thread *starlark.
 	return true, nil
 }
 
-func (v validationKwargs) convertToRules() *rule {
-	if min := v.minLength; min > 0 {
-		a := yttlibrary.NewAssertMinLength(min)
-		return &rule{
-			msg:       fmt.Sprintf("length greater or equal to %v", min),
+func (v validationKwargs) convertToRules() []rule {
+	var rules []rule
+	if minLen := v.minLength; minLen > 0 {
+		a := yttlibrary.NewAssertMinLength(minLen)
+		rules = append(rules, rule{
+			msg:       fmt.Sprintf("length greater or equal to %v", minLen),
 			assertion: a,
-		}
+		})
+	}
+	if v.maxLength != nil {
+		a := yttlibrary.NewAssertMaxLength(*v.maxLength)
+		rules = append(rules, rule{
+			msg:       fmt.Sprintf("length less than or equal to %v", *v.maxLength),
+			assertion: a,
+		})
+	}
+	if min := v.min; min > 0 {
+		a := yttlibrary.NewAssertMin(min)
+		rules = append(rules, rule{
+			msg:       fmt.Sprintf("a value greater or equal to %v", min),
+			assertion: a,
+		})
+	}
+	if v.max != nil {
+		a := yttlibrary.NewAssertMax(*v.max)
+		rules = append(rules, rule{
+			msg:       fmt.Sprintf("a value less than or equal to %v", *v.max),
+			assertion: a,
+		})
 	}
 
-	return nil
+	return rules
 }
 
 // AssertCheck holds the resulting violations from executing Validations on a node.
