@@ -248,7 +248,7 @@ map:
 
 				assertSucceedsDocSet(t, filesToProcess, expected, opts)
 			})
-			t.Run("when_null_skip", func(t *testing.T) {
+			t.Run("not_null", func(t *testing.T) {
 				opts := cmdtpl.NewOptions()
 				opts.DataValuesFlags.Inspect = true
 				dataValuesYAML := `#@data/values
@@ -587,6 +587,124 @@ my_map:
 
 			assertFails(t, filesToProcess, expectedErr, opts)
 		})
+		t.Run("min_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate min_len=1
+string: ""
+#@assert/validate min_len=5
+cow: "cat"
+#@assert/validate min_len=1
+array: []
+#@assert/validate min_len=1
+map: {}
+`
+
+			expectedErr := `One or more data values were invalid:
+- "string" (dv.yml:4) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length greater or equal to 5"; assert.min_len: length of value was less than 5 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:7)
+- "map" (dv.yml:10) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:9)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("max_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate max_len=1
+string: "example"
+#@assert/validate max_len=0
+cow: "d"
+#@assert/validate max_len=1
+array:
+- example
+- foo
+#@assert/validate max_len=1
+map:
+  foo: bar
+  cat: cow
+`
+
+			expectedErr := `One or more data values were invalid:
+- "string" (dv.yml:4) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length less than or equal to 0"; assert.max_len: length of value was more than 0 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:7)
+- "map" (dv.yml:12) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:11)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("min", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate min=1
+foo: 0
+#@assert/validate min=8080
+bar: 7
+`
+
+			expectedErr := `One or more data values were invalid:
+- "foo" (dv.yml:4) requires "a value greater or equal to 1"; assert.min: value was less than 1 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; assert.min: value was less than 8080 (by dv.yml:5)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("max", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate max=0
+foo: 2
+#@assert/validate max=8088
+bar: 13000
+`
+
+			expectedErr := `One or more data values were invalid:
+- "foo" (dv.yml:4) requires "a value less than or equal to 0"; assert.max: value was more than 0 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value less than or equal to 8088"; assert.max: value was more than 8088 (by dv.yml:5)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("not_null", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values
+---
+#@assert/validate not_null=True
+foo: null
+`
+
+			expectedErr := `One or more data values were invalid:
+- "foo" (dv.yml:4) requires "a value less that is not null"; assert.not_null: value was null (by dv.yml:3)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
 	})
 
 	t.Run("when validations on a document fail with variables in validation", func(t *testing.T) {
@@ -820,10 +938,11 @@ values:
 
 		assertSucceedsDocSet(t, filesToProcess, expected, opts)
 	})
-	t.Run("using the when kwarg", func(t *testing.T) {
-		opts := cmdtpl.NewOptions()
-		opts.DataValuesFlags.Inspect = true
-		schemaYAML := `#@data/values-schema
+	t.Run("with kwargs", func(t *testing.T) {
+		t.Run("when", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
 #@ def failAssert(v):
 #@ return False
 #@ end
@@ -839,20 +958,20 @@ array:
 -  1
 `
 
-		expected := `string: example
+			expected := `string: example
 array: []
 `
 
-		filesToProcess := files.NewSortedFiles([]*files.File{
-			files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
-		})
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
 
-		assertSucceedsDocSet(t, filesToProcess, expected, opts)
-	})
-	t.Run("using the when_null_skip kwarg", func(t *testing.T) {
-		opts := cmdtpl.NewOptions()
-		opts.DataValuesFlags.Inspect = true
-		schemaYAML := `#@data/values-schema
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("when_null_skip", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
 #@ def failAssert(v):
 #@ return False
 #@ end
@@ -868,17 +987,172 @@ array:
 -  3
 `
 
-		expected := `string: null
+			expected := `string: null
 array:
 - null
 `
 
-		filesToProcess := files.NewSortedFiles([]*files.File{
-			files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
-		})
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
 
-		assertSucceedsDocSet(t, filesToProcess, expected, opts)
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("min_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation min_len=1
+string: "example"
+#@schema/validation min_len=3
+cow: "cat"
+#@schema/default ["example"]
+#@schema/validation min_len=1
+array:
+- example
+#@schema/validation min_len=1
+map:
+ foo: bar
+`
+
+			expected := `string: example
+cow: cat
+array:
+- example
+map:
+  foo: bar
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("max_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation max_len=10
+string: "example"
+#@schema/validation max_len=3
+cow: "cat"
+#@schema/default ["example"]
+#@schema/validation max_len=1
+array:
+- example
+#@schema/validation max_len=1
+map:
+ foo: bar
+`
+
+			expected := `string: example
+cow: cat
+array:
+- example
+map:
+  foo: bar
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("min", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation min=10
+string: 100
+#@schema/validation min=3
+cow: 3
+#@schema/default [1.3]
+array:
+#@schema/validation min=1
+- 1.3
+map:
+  #@schema/validation min=1
+  foo: 2
+`
+
+			expected := `string: 100
+cow: 3
+array:
+- 1.3
+map:
+  foo: 2
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("max", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation max=10
+string: 7
+#@schema/validation max=3
+cow: 3
+#@schema/default [1]
+array:
+#@schema/validation max=1.5
+- 1
+map:
+  #@schema/validation max=1
+  foo: 0
+`
+
+			expected := `string: 7
+cow: 3
+array:
+- 1
+map:
+  foo: 0
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
+		t.Run("not_null", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation not_null=True
+string: ""
+#@schema/default [0]
+#@schema/validation not_null=True
+array:
+#@schema/validation not_null=True
+-  0
+`
+
+			expected := `string: ""
+array:
+- 0
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertSucceedsDocSet(t, filesToProcess, expected, opts)
+		})
 	})
+
 	t.Run("when validations pass by default on nullable schema type", func(t *testing.T) {
 		opts := cmdtpl.NewOptions()
 		opts.DataValuesFlags.Inspect = true
@@ -1309,6 +1583,140 @@ my_array_item:
 - "my_map" (schema.yml:5) requires "a failing validation" (by schema.yml:4)
 - "my_array" (schema.yml:9) requires "a failing validation" (by schema.yml:8)
 - array item (schema.yml:12) requires "a failing validation" (by schema.yml:14)`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("min_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values-schema
+---
+#@schema/validation min_len=1
+string: ""
+#@schema/validation min_len=5
+cow: "cat"
+#@schema/validation min_len=1
+array:
+- ""
+#@schema/validation min_len=1
+map: {}
+`
+
+			expectedErr := `One or more data values were invalid:
+- "string" (dv.yml:4) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length greater or equal to 5"; assert.min_len: length of value was less than 5 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:7)
+- "map" (dv.yml:11) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:10)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("max_len", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values-schema
+---
+#@schema/validation max_len=1
+string: "example"
+#@schema/validation max_len=0
+cow: "d"
+#@schema/default [1,2]
+#@schema/validation max_len=1
+array:
+- 0
+#@schema/validation max_len=1
+map:
+  foo: bar
+  cat: cow
+`
+
+			expectedErr := `One or more data values were invalid:
+- "string" (dv.yml:4) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length less than or equal to 0"; assert.max_len: length of value was more than 0 (by dv.yml:5)
+- "array" (dv.yml:9) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:8)
+- "map" (dv.yml:12) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:11)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("min", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values-schema
+---
+#@schema/validation min=1
+foo: 0
+#@schema/validation min=8080
+bar: 7
+`
+
+			expectedErr := `One or more data values were invalid:
+- "foo" (dv.yml:4) requires "a value greater or equal to 1"; assert.min: value was less than 1 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; assert.min: value was less than 8080 (by dv.yml:5)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("max", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			dataValuesYAML := `#@data/values-schema
+---
+#@schema/validation max=0
+foo: 2
+#@schema/validation max=8088
+bar: 13000
+`
+
+			expectedErr := `One or more data values were invalid:
+- "foo" (dv.yml:4) requires "a value less than or equal to 0"; assert.max: value was more than 0 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value less than or equal to 8088"; assert.max: value was more than 8088 (by dv.yml:5)
+`
+
+			filesToProcess := files.NewSortedFiles([]*files.File{
+				files.MustNewFileFromSource(files.NewBytesSource("dv.yml", []byte(dataValuesYAML))),
+			})
+
+			assertFails(t, filesToProcess, expectedErr, opts)
+		})
+		t.Run("not_null and nullable schema type", func(t *testing.T) {
+			opts := cmdtpl.NewOptions()
+			opts.DataValuesFlags.Inspect = true
+			schemaYAML := `#@data/values-schema
+---
+#@schema/validation not_null=True
+#@schema/nullable
+string: ""
+#@schema/nullable
+#@schema/validation not_null=True
+int: 0
+#@schema/nullable
+#@schema/validation not_null=True
+array:
+- ""
+#@schema/nullable
+#@schema/validation not_null=True
+map: {}
+`
+
+			expectedErr := `One or more data values were invalid:
+- schema/nullable makes when_null_skip=True by default
+- which is skipping the rule created by the kwarg
+- not_null=True
+- 
+`
 
 			filesToProcess := files.NewSortedFiles([]*files.File{
 				files.MustNewFileFromSource(files.NewBytesSource("schema.yml", []byte(schemaYAML))),

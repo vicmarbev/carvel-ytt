@@ -145,7 +145,7 @@ func newMaxLengthStarlarkFunc(maxLength int) core.StarlarkFunc {
 		if valLen <= maxLength {
 			return starlark.None, nil
 		} else {
-			return starlark.None, fmt.Errorf("length of value was less than %v", maxLength)
+			return starlark.None, fmt.Errorf("length of value was more than %v", maxLength)
 		}
 	}
 }
@@ -191,7 +191,7 @@ func newMaxStarlarkFunc(max int) core.StarlarkFunc {
 		if intNum <= max {
 			return starlark.None, nil
 		} else {
-			return starlark.None, fmt.Errorf("length of value was less than %v", max)
+			return starlark.None, fmt.Errorf("value was more than %v", max)
 		}
 	}
 }
