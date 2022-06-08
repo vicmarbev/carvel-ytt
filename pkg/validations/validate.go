@@ -5,6 +5,7 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/k14s/starlark-go/starlark"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/filepos"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
@@ -131,8 +132,10 @@ func (v *NodeValidation) DefaultNullSkipTrue() {
 // shouldValidate uses validationKwargs and the node's value to run checks on the value. If the value satisfies the checks,
 // then the NodeValidation's rules should execute, otherwise the rules will be skipped.
 func (v validationKwargs) shouldValidate(value starlark.Value, thread *starlark.Thread) (bool, error) {
-	_, isNone := value.(starlark.NoneType)
-	if isNone && (v.whenNullSkip != nil && *v.whenNullSkip) {
+	_, isNull := value.(starlark.NoneType)
+	nullAllowed := !v.notNull
+	whenNullSkip := v.whenNullSkip != nil && *v.whenNullSkip
+	if isNull && nullAllowed && whenNullSkip {
 		return false, nil
 	}
 
@@ -143,7 +146,7 @@ func (v validationKwargs) shouldValidate(value starlark.Value, thread *starlark.
 		}
 
 		isTrue := bool(result.Truth())
-		return isNone || isTrue, nil
+		return isNull || isTrue, nil
 	}
 	// if no kwargs then execute rules
 	return true, nil
@@ -182,7 +185,7 @@ func (v validationKwargs) convertToRules() []rule {
 	if v.notNull {
 		a := yttlibrary.NewAssertNotNull()
 		rules = append(rules, rule{
-			msg:       fmt.Sprintf("a value less that is not null"),
+			msg:       fmt.Sprintf("not null"),
 			assertion: a,
 		})
 	}
