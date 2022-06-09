@@ -1,0 +1,17 @@
+#@ load("@ytt:assert", "assert")
+
+max_length_works_strings: #@ assert.max_length(3)
+max_length_works_array: #@ assert.max_length([1, 2], [1, 2])
+max_length_works_map: #@ assert.max_length({"foo": "bar"}, {"foo": "bar"})
+
++++
+
+max_length_works_strings: null
+max_length_works_numbers: null
+max_length_works_decimal: null
+max_length_works_boolean: null
+max_length_works_none: null
+max_length_works_array: null
+max_length_works_map: null
+max_length_works_yaml: null
+max_length_works_docset: null

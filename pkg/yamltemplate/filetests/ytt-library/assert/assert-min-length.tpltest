@@ -1,0 +1,23 @@
+#@ load("@ytt:assert", "assert")
+
+min_length_works_strings: #@ assert.min_length(1)
+min_length_works_numbers: #@ assert.min_length(1, 1)
+min_length_works_decimal: #@ assert.min_length(3.14159, 3.14159)
+min_length_works_boolean: #@ assert.min_length(True, True)
+min_length_works_none: #@ assert.min_length(None, None)
+min_length_works_array: #@ assert.min_length([1, 2], [1, 2])
+min_length_works_map: #@ assert.min_length({"foo": "bar"}, {"foo": "bar"})
+min_length_works_yaml: #@ assert.min_length(yamlFunc(), yamlFunc())
+min_length_works_docset: #@ assert.min_length(deploymentA(), deploymentB())
+
++++
+
+min_length_works_strings: null
+min_length_works_numbers: null
+min_length_works_decimal: null
+min_length_works_boolean: null
+min_length_works_none: null
+min_length_works_array: null
+min_length_works_map: null
+min_length_works_yaml: null
+min_length_works_docset: null

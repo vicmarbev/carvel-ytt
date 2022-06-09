@@ -16,10 +16,14 @@ var (
 		"assert": &starlarkstruct.Module{
 			Name: "assert",
 			Members: starlark.StringDict{
-				"equals": starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
-				"fail":   starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
-				"try_to": starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
-				//"min_length": /*extract in var */ starlark.NewBuiltin("assert.min_len", core.ErrWrapper(assertModule{}.MinLength)),
+				"equals":     starlark.NewBuiltin("assert.equals", core.ErrWrapper(assertModule{}.Equals)),
+				"fail":       starlark.NewBuiltin("assert.fail", core.ErrWrapper(assertModule{}.Fail)),
+				"try_to":     starlark.NewBuiltin("assert.try_to", core.ErrWrapper(assertModule{}.TryTo)),
+				"min":        starlark.NewBuiltin("assert.min", core.ErrWrapper(assertModule{}.Min)),
+				"min_length": starlark.NewBuiltin("assert.min_len", core.ErrWrapper(assertModule{}.MinLength)),
+				"max":        starlark.NewBuiltin("assert.max", core.ErrWrapper(assertModule{}.Max)),
+				"max_length": starlark.NewBuiltin("assert.max_length", core.ErrWrapper(assertModule{}.MaxLength)),
+				"not_null":   starlark.NewBuiltin("assert.not_null", core.ErrWrapper(assertModule{}.NotNull)),
 			},
 		},
 	}
@@ -103,16 +107,6 @@ func (b assertModule) TryTo(thread *starlark.Thread, f *starlark.Builtin, args s
 	return starlark.Tuple{retVal, starlark.None}, nil
 }
 
-//func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-//	//do we need two values here?
-//	if args.Len() != 1 {
-//		return starlark.None, fmt.Errorf("expected exactly one argument")
-//	}
-//
-//	//convert string function to
-//	return starlark.None, nil
-//}
-
 func newMinLengthStarlarkFunc(minLength int) core.StarlarkFunc {
 	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		if args.Len() != 1 {
@@ -131,6 +125,14 @@ func newMinLengthStarlarkFunc(minLength int) core.StarlarkFunc {
 }
 func NewAssertMinLength(minLength int) starlark.Callable {
 	return starlark.NewBuiltin("assert.min_len", core.ErrWrapper(newMinLengthStarlarkFunc(minLength)))
+}
+func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	if args.Len() != 1 {
+		return starlark.None, fmt.Errorf("expected exactly one argument")
+	}
+
+	//convert string function to
+	return starlark.None, nil
 }
 
 func newMaxLengthStarlarkFunc(maxLength int) core.StarlarkFunc {
@@ -151,6 +153,9 @@ func newMaxLengthStarlarkFunc(maxLength int) core.StarlarkFunc {
 }
 func NewAssertMaxLength(maxLength int) starlark.Callable {
 	return starlark.NewBuiltin("assert.max_len", core.ErrWrapper(newMaxLengthStarlarkFunc(maxLength)))
+}
+func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	return starlark.None, nil
 }
 
 func newMinStarlarkFunc(min int) core.StarlarkFunc {
@@ -175,6 +180,9 @@ func newMinStarlarkFunc(min int) core.StarlarkFunc {
 func NewAssertMin(min int) starlark.Callable {
 	return starlark.NewBuiltin("assert.min", core.ErrWrapper(newMinStarlarkFunc(min)))
 }
+func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	return starlark.None, nil
+}
 
 func newMaxStarlarkFunc(max int) core.StarlarkFunc {
 	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -198,6 +206,9 @@ func newMaxStarlarkFunc(max int) core.StarlarkFunc {
 func NewAssertMax(max int) starlark.Callable {
 	return starlark.NewBuiltin("assert.max", core.ErrWrapper(newMaxStarlarkFunc(max)))
 }
+func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	return starlark.None, nil
+}
 
 func newNotNullStarlarkFunc() core.StarlarkFunc {
 	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -214,4 +225,7 @@ func newNotNullStarlarkFunc() core.StarlarkFunc {
 }
 func NewAssertNotNull() starlark.Callable {
 	return starlark.NewBuiltin("assert.not_null", core.ErrWrapper(newNotNullStarlarkFunc()))
+}
+func (b assertModule) NotNull(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	return starlark.None, nil
 }
