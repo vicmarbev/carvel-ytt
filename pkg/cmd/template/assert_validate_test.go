@@ -656,8 +656,8 @@ bar: 7
 `
 
 			expectedErr := `One or more data values were invalid:
-- "foo" (dv.yml:4) requires "a value greater or equal to 1"; assert.min: value was less than 1 (by dv.yml:3)
-- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; assert.min: value was less than 8080 (by dv.yml:5)
+- "foo" (dv.yml:4) requires "a value greater or equal to 1"; fail: 0 is less than 1 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; fail: 7 is less than 8080 (by dv.yml:5)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{
@@ -1660,8 +1660,8 @@ bar: 7
 `
 
 			expectedErr := `One or more data values were invalid:
-- "foo" (dv.yml:4) requires "a value greater or equal to 1"; assert.min: value was less than 1 (by dv.yml:3)
-- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; assert.min: value was less than 8080 (by dv.yml:5)
+- "foo" (dv.yml:4) requires "a value greater or equal to 1"; fail: 0 is less than 1 (by dv.yml:3)
+- "bar" (dv.yml:6) requires "a value greater or equal to 8080"; fail: 7 is less than 8080 (by dv.yml:5)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{

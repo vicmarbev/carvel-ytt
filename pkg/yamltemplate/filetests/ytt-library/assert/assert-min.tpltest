@@ -1,11 +1,14 @@
 #@ load("@ytt:assert", "assert")
 
 min_with_int:
-  as_validation_assertion: #@ assert.min(2)(2)
+  as_validation_assertion: #@ assert.min(1)(2)
   as_plain_func:           #@ assert.min(1, 2)
 min_with_float:
   as_validation_assertion: #@ assert.min(1.1)(1.2)
   as_plain_func:           #@ assert.min(1.1, 1.2)
+min_with_string:
+  as_validation_assertion: #@ assert.min(["a", 1])(["a", 2])
+  as_plain_func:           #@ assert.min("a", "b")
 
 +++
 
@@ -13,5 +16,8 @@ min_with_int:
   as_validation_assertion: null
   as_plain_func: null
 min_with_float:
+  as_validation_assertion: null
+  as_plain_func: null
+min_with_string:
   as_validation_assertion: null
   as_plain_func: null

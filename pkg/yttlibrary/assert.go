@@ -5,6 +5,7 @@ package yttlibrary
 
 import (
 	"fmt"
+
 	"github.com/k14s/starlark-go/syntax"
 
 	"github.com/k14s/starlark-go/starlark"
@@ -132,7 +133,7 @@ func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, ar
 		return starlark.None, fmt.Errorf("expected exactly one argument")
 	}
 
-	//convert string function to
+	// convert string function to
 	return starlark.None, nil
 }
 
@@ -159,82 +160,55 @@ func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, ar
 	return starlark.None, nil
 }
 
-// Problem
-// 1. we want a single function that can take _either_ an int, a float, or a string.
-// 2. Go is statically typed, if we're going to compare the two values in Go, we need to downcast to the concrete type, first.
-// 3. Starlark is dynamically typed, if we compare two values in Starlark, we don't need to know the type, because Starlark comparison will do that for us.
-// ==> Can we include a function in a ytt program that is written in Starlark (instead of Go)?
-
-func minLambda() (syntax.Expr, error) {
-	minFuncBody := `(lambda x, y: fail("{} is less than {}".format(y, x)) if y < x else None)(minimum, value)`
-	expr, err := syntax.ParseExpr("@ytt:assert.min()", minFuncBody, syntax.BlockScanner)
-
+// assertMinimum produces a higher-order Starlark function that asserts that a given value is at least "minimum".
+func assertMinimum(minimum starlark.Value) (*starlark.Function, error) {
+	src := `lambda value: fail("{} is less than {}".format(value, minimum)) if value < minimum else None`
+	expr, err := syntax.ParseExpr("@ytt:assert.min()", src, syntax.BlockScanner)
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
 	}
-	return expr, nil // expr = lambda (minimum, value)
-}
+	thread := &starlark.Thread{Name: "ytt-internal"}
 
-// TODO min should be starlark.Value
-func newMinStarlarkFunc(min int) core.StarlarkFunc {
-	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		if args.Len() != 1 {
-			return starlark.None, fmt.Errorf("expected exactly one argument")
-		}
-		val := args[0]
-		expr, err := minLambda()
-		if err != nil {
-			return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
-		}
-		exprArgs := starlark.StringDict{"value": val, "minimum": core.NewGoValue(min).AsStarlarkValue()}
-		starlarkValue, err := starlark.EvalExpr(thread, expr, exprArgs)
-		return starlarkValue, err
-
-		/*	val := args[0]
-			v, err := starlark.NumberToInt(val)
-			if err != nil {
-				return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
-			}
-			num, _ := v.Int64()
-			intNum := int(num)
-			if intNum >= min {
-				return starlark.None, nil
-			} else {
-				return starlark.None, fmt.Errorf("value was less than %v", min)
-			}*/
+	evalExpr, err := starlark.EvalExpr(thread, expr, starlark.StringDict{"minimum": minimum})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to invoke @ytt:assert.min(%v) :%s", minimum, err)
 	}
-}
-func NewAssertMin(min int) starlark.Callable {
-	return starlark.NewBuiltin("assert.min", core.ErrWrapper(newMinStarlarkFunc(min)))
+	return evalExpr.(*starlark.Function), nil
 }
 
-// Min is a core.StarlarkFunc
+// NewAssertMin produces a higher-order Starlark function that asserts that a given value is at least "minimum"
+func NewAssertMin(minimum int) *starlark.Function {
+	min := core.NewGoValue(minimum).AsStarlarkValue()
+	minimumFunc, err := assertMinimum(min)
+	if err != nil {
+		// TODO: given that "minimum" is user-supplied, return "err" instead of panicing
+		panic(fmt.Sprintf("failed to build assert.minimum(): %s", err))
+	}
+	return minimumFunc
+}
+
+// Min is a core.StarlarkFunc that asserts that a given value is at least a given minimum.
 func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	if len(args) == 0 {
 		return starlark.None, fmt.Errorf("expected at least one argument.")
 	}
-
-	// if one argument, return a builtin: min(arg)
-	val := args[0]
-	v, err := starlark.NumberToInt(val)
-	if err != nil {
-		return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
+	if len(args) > 2 {
+		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
 	}
-	num, _ := v.Int64()
-	intNum := int(num)
-	minFunc := NewAssertMin(intNum)
+
+	minFunc, err := assertMinimum(args[0])
+	if err != nil {
+		return starlark.None, err
+	}
 	if len(args) == 1 {
 		return minFunc, nil
 	}
-	// if two arguments, return None or err: min(arg1, arg2)
-	if len(args) == 2 {
-		result, err := starlark.Call(thread, minFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
-		if err != nil {
-			return starlark.None, err
-		}
-		return result, nil
+
+	result, err := starlark.Call(thread, minFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
+	if err != nil {
+		return starlark.None, err
 	}
-	return starlark.None, nil
+	return result, nil
 }
 
 func newMaxStarlarkFunc(max int) core.StarlarkFunc {
