@@ -192,22 +192,25 @@ map:
 				dataValuesYAML := `#@data/values
 ---
 #@assert/validate min=10
-string: 100
-#@assert/validate min=3
-cow: 3
-array:
+int: 11
+#@assert/validate min=1.1
+float: 1.2
+#@assert/validate min=False
+bool: true
+within_array:
 #@assert/validate min=1
-- 1.3
-map:
+- 2
+within_map:
   #@assert/validate min=1
   foo: 2
 `
 
-				expected := `string: 100
-cow: 3
-array:
-- 1.3
-map:
+				expected := `int: 11
+float: 1.2
+bool: true
+within_array:
+- 2
+within_map:
   foo: 2
 `
 
@@ -1069,8 +1072,8 @@ map:
 ---
 #@schema/validation min=10
 string: 100
-#@schema/validation min=3
-cow: 3
+#@schema/validation min=1.1
+cow: 1.1
 #@schema/default [1.3]
 array:
 #@schema/validation min=1
@@ -1081,7 +1084,7 @@ map:
 `
 
 			expected := `string: 100
-cow: 3
+cow: 1.1
 array:
 - 1.3
 map:

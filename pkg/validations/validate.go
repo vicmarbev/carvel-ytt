@@ -33,7 +33,7 @@ type validationKwargs struct {
 	whenNullSkip *bool // default: nil if kwarg is not set, True if value is Nullable
 	minLength    int   // 0 len("") == 0, this always passes
 	maxLength    *int
-	min          int
+	min          starlark.Value
 	max          *int
 	notNull      bool
 	// *int , default=nil possible_values={&1, &2, &-3, ..}
@@ -168,10 +168,10 @@ func (v validationKwargs) convertToRules() []rule {
 			assertion: a,
 		})
 	}
-	if min := v.min; min > 0 {
-		a := yttlibrary.NewAssertMin(min)
+	if v.min != nil {
+		a := yttlibrary.NewAssertMin(v.min)
 		rules = append(rules, rule{
-			msg:       fmt.Sprintf("a value greater or equal to %v", min),
+			msg:       fmt.Sprintf("a value greater or equal to %v", v.min),
 			assertion: a,
 		})
 	}

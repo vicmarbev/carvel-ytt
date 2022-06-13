@@ -161,6 +161,8 @@ func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, ar
 }
 
 // assertMinimum produces a higher-order Starlark function that asserts that a given value is at least "minimum".
+//
+// see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
 func assertMinimum(minimum starlark.Value) (*starlark.Function, error) {
 	src := `lambda value: fail("{} is less than {}".format(value, minimum)) if value < minimum else None`
 	expr, err := syntax.ParseExpr("@ytt:assert.min()", src, syntax.BlockScanner)
@@ -177,11 +179,13 @@ func assertMinimum(minimum starlark.Value) (*starlark.Function, error) {
 }
 
 // NewAssertMin produces a higher-order Starlark function that asserts that a given value is at least "minimum"
-func NewAssertMin(minimum int) *starlark.Function {
-	min := core.NewGoValue(minimum).AsStarlarkValue()
-	minimumFunc, err := assertMinimum(min)
+func NewAssertMin(minimum starlark.Value) *starlark.Function {
+	minimumFunc, err := assertMinimum(minimum)
 	if err != nil {
-		// TODO: given that "minimum" is user-supplied, return "err" instead of panicing
+		// TODO: consider whether to return "err" instead of panicing
+		// - minimum is technically supplied by the user
+		// - under what conditions does assertMinimum() produce an error?
+		// - do any of those conditions occur *because* of the user input?
 		panic(fmt.Sprintf("failed to build assert.minimum(): %s", err))
 	}
 	return minimumFunc
