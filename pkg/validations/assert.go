@@ -135,6 +135,7 @@ func newValidationKwargs(kwargs []starlark.Tuple, annPos *filepos.Position) (val
 			intNum := int(num)
 			processedKwargs.maxLength = &intNum
 		case ValidationKwargMin:
+			// TODO: keep as starlark.Value, assert.min() can accept many types.
 			v, err := starlark.NumberToInt(value[1])
 			if err != nil {
 				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be an number, but was %s (at %s)", ValidationKwargMin, value[1].Type(), annPos.AsCompactString())

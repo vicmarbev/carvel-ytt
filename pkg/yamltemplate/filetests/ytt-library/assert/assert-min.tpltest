@@ -1,24 +1,17 @@
 #@ load("@ytt:assert", "assert")
 
-#@ assert.min(1) ==> lambda v: return v >= 1
-#@ assert.min(1)(4) ==> True
-#@ assert.min(1, 4) ==> True
-
-min_works_numbers: #@ assert.min(1)
-min_works_decimal: #@ assert.min(3.14159)
-min_works_array: #@ assert.min([1, 2], [1, 2])
-min_works_map: #@ assert.min({"foo": "bar"}, {"foo": "bar"})
-min_works_yaml: #@ assert.min(yamlFunc(), yamlFunc())
-min_works_docset: #@ assert.min(deploymentA(), deploymentB())
+min_with_int:
+  as_validation_assertion: #@ assert.min(2)(2)
+  as_plain_func:           #@ assert.min(1, 2)
+min_with_float:
+  as_validation_assertion: #@ assert.min(1.1)(1.2)
+  as_plain_func:           #@ assert.min(1.1, 1.2)
 
 +++
 
-min_works_strings: null
-min_works_numbers: null
-min_works_decimal: null
-min_works_boolean: null
-min_works_none: null
-min_works_array: null
-min_works_map: null
-min_works_yaml: null
-min_works_docset: null
+min_with_int:
+  as_validation_assertion: null
+  as_plain_func: null
+min_with_float:
+  as_validation_assertion: null
+  as_plain_func: null

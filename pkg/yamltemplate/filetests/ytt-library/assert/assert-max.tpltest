@@ -1,23 +1,17 @@
 #@ load("@ytt:assert", "assert")
 
-max_works_strings: #@ assert.max("foo", "foo")
-max_works_numbers: #@ assert.max(1, 1)
-max_works_decimal: #@ assert.max(3.14159, 3.14159)
-max_works_boolean: #@ assert.max(True, True)
-max_works_none: #@ assert.max(None, None)
-max_works_array: #@ assert.max([1, 2], [1, 2])
-max_works_map: #@ assert.max({"foo": "bar"}, {"foo": "bar"})
-max_works_yaml: #@ assert.max(yamlFunc(), yamlFunc())
-max_works_docset: #@ assert.max(deploymentA(), deploymentB())
+max_with_int:
+  as_validation_assertion: #@ assert.max(1, 2)
+  as_plain_func:           #@ assert.max(1, 2)
+max_with_float:
+  as_validation_assertion: #@ assert.max(1.1, 1.2)
+  as_plain_func:           #@ assert.max(1.1, 1.2)
+max_with_string:
+  as_validation_assertion: #@ assert.max("a", "b")
+  as_plain_func:           #@ assert.max("a", "b")
 
 +++
 
-max_works_strings: null
-max_works_numbers: null
-max_works_decimal: null
-max_works_boolean: null
-max_works_none: null
-max_works_array: null
-max_works_map: null
-max_works_yaml: null
-max_works_docset: null
+max_with_int:
+  as_validation_assertion: null
+  as_plain_func: null
