@@ -605,10 +605,10 @@ map: {}
 `
 
 			expectedErr := `One or more data values were invalid:
-- "string" (dv.yml:4) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:3)
-- "cow" (dv.yml:6) requires "length greater or equal to 5"; assert.min_len: length of value was less than 5 (by dv.yml:5)
-- "array" (dv.yml:8) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:7)
-- "map" (dv.yml:10) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:9)
+- "string" (dv.yml:4) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length greater or equal to 5"; fail: length of 3 is less than 5 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:7)
+- "map" (dv.yml:10) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:9)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{
@@ -636,10 +636,10 @@ map:
 `
 
 			expectedErr := `One or more data values were invalid:
-- "string" (dv.yml:4) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:3)
-- "cow" (dv.yml:6) requires "length less than or equal to 0"; assert.max_len: length of value was more than 0 (by dv.yml:5)
-- "array" (dv.yml:8) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:7)
-- "map" (dv.yml:12) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:11)
+- "string" (dv.yml:4) requires "length less than or equal to 1"; fail: length of 7 is more than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length less than or equal to 0"; fail: length of 1 is more than 0 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length less than or equal to 1"; fail: length of 2 is more than 1 (by dv.yml:7)
+- "map" (dv.yml:12) requires "length less than or equal to 1"; fail: length of 2 is more than 1 (by dv.yml:11)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{
@@ -1609,10 +1609,10 @@ map: {}
 `
 
 			expectedErr := `One or more data values were invalid:
-- "string" (dv.yml:4) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:3)
-- "cow" (dv.yml:6) requires "length greater or equal to 5"; assert.min_len: length of value was less than 5 (by dv.yml:5)
-- "array" (dv.yml:8) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:7)
-- "map" (dv.yml:11) requires "length greater or equal to 1"; assert.min_len: length of value was less than 1 (by dv.yml:10)
+- "string" (dv.yml:4) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length greater or equal to 5"; fail: length of 3 is less than 5 (by dv.yml:5)
+- "array" (dv.yml:8) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:7)
+- "map" (dv.yml:11) requires "length greater or equal to 1"; fail: length of 0 is less than 1 (by dv.yml:10)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{
@@ -1640,10 +1640,10 @@ map:
 `
 
 			expectedErr := `One or more data values were invalid:
-- "string" (dv.yml:4) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:3)
-- "cow" (dv.yml:6) requires "length less than or equal to 0"; assert.max_len: length of value was more than 0 (by dv.yml:5)
-- "array" (dv.yml:9) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:8)
-- "map" (dv.yml:12) requires "length less than or equal to 1"; assert.max_len: length of value was more than 1 (by dv.yml:11)
+- "string" (dv.yml:4) requires "length less than or equal to 1"; fail: length of 7 is more than 1 (by dv.yml:3)
+- "cow" (dv.yml:6) requires "length less than or equal to 0"; fail: length of 1 is more than 0 (by dv.yml:5)
+- "array" (dv.yml:9) requires "length less than or equal to 1"; fail: length of 2 is more than 1 (by dv.yml:8)
+- "map" (dv.yml:12) requires "length less than or equal to 1"; fail: length of 2 is more than 1 (by dv.yml:11)
 `
 
 			filesToProcess := files.NewSortedFiles([]*files.File{

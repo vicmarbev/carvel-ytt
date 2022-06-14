@@ -1,17 +1,35 @@
 #@ load("@ytt:assert", "assert")
 
-max_length_with_int:
-  as_validation_assertion: #@ assert.max_length(1, 2)
-  as_plain_func:           #@ assert.max_length(1, 2)
-max_length_with_float:
-  as_validation_assertion: #@ assert.max_length(1.1, 1.2)
-  as_plain_func:           #@ assert.max_length(1.1, 1.2)
-max_length_with_string:
-  as_validation_assertion: #@ assert.max_length("a", "b")
-  as_plain_func:           #@ assert.max_length("a", "b")
+#@ def docset():
+---
+first
+---
+second
+#@ end
+---
+#@ def mapping():
+first: 1
+second: 2
+#@ end
+---
+#@ def array():
+- first
+- second
+#@ end
+---
+
+max_len_of_string: #@ assert.max_len(2, "o0")
+max_len_of_dict:   #@ assert.max_len(2, {"first": 1, "second": 2})
+max_len_of_list:   #@ assert.max_len(2, ["first", "second"])
+max_len_of_docset: #@ assert.max_len(2, docset())
+max_len_of_map:    #@ assert.max_len(2, mapping())
+max_len_of_array:  #@ assert.max_len(2, array())
 
 +++
 
-max_length_with_int:
-  as_validation_assertion: null
-  as_plain_func: null
+max_len_of_string: null
+max_len_of_dict: null
+max_len_of_list: null
+max_len_of_docset: null
+max_len_of_map: null
+max_len_of_array: null

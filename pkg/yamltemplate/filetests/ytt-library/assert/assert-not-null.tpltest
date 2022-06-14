@@ -1,23 +1,31 @@
 #@ load("@ytt:assert", "assert")
 
-not_null_works_strings: #@ assert.not_null("foo", "foo")
-not_null_works_numbers: #@ assert.not_null(1, 1)
-not_null_works_decimal: #@ assert.not_null(3.14159, 3.14159)
-not_null_works_boolean: #@ assert.not_null(True, True)
-not_null_works_none: #@ assert.not_null(None, None)
-not_null_works_array: #@ assert.not_null([1, 2], [1, 2])
-not_null_works_map: #@ assert.not_null({"foo": "bar"}, {"foo": "bar"})
-not_null_works_yaml: #@ assert.not_null(yamlFunc(), yamlFunc())
-not_null_works_docset: #@ assert.not_null(deploymentA(), deploymentB())
+#@ def docset():
+---
+first
+#@ end
+---
+#@ def mapping():
+first: 1
+#@ end
+---
+#@ def array():
+- first
+#@ end
+---
+
+max_len_of_string: #@ assert.not_null("o0")
+max_len_of_dict:   #@ assert.not_null({"first": 1, "second": 2})
+max_len_of_list:   #@ assert.not_null(["first", "second"])
+max_len_of_docset: #@ assert.not_null(docset())
+max_len_of_map:    #@ assert.not_null(mapping())
+max_len_of_array:  #@ assert.not_null(array())
 
 +++
 
-not_null_works_strings: null
-not_null_works_numbers: null
-not_null_works_decimal: null
-not_null_works_boolean: null
-not_null_works_none: null
-not_null_works_array: null
-not_null_works_map: null
-not_null_works_yaml: null
-not_null_works_docset: null
+max_len_of_string: null
+max_len_of_dict: null
+max_len_of_list: null
+max_len_of_docset: null
+max_len_of_map: null
+max_len_of_array: null
