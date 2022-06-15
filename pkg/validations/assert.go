@@ -137,13 +137,7 @@ func newValidationKwargs(kwargs []starlark.Tuple, annPos *filepos.Position) (val
 		case ValidationKwargMin:
 			processedKwargs.min = value[1]
 		case ValidationKwargMax:
-			v, err := starlark.NumberToInt(value[1])
-			if err != nil {
-				return validationKwargs{}, fmt.Errorf("expected keyword argument %q to be an number, but was %s (at %s)", ValidationKwargMax, value[1].Type(), annPos.AsCompactString())
-			}
-			num, _ := v.Int64()
-			intNum := int(num)
-			processedKwargs.max = &intNum
+			processedKwargs.max = value[1]
 		case ValidationKwargNotNull:
 			v, ok := value[1].(starlark.Bool)
 			if !ok {

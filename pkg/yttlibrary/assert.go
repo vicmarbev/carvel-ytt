@@ -256,7 +256,7 @@ func assertMinimum(minimum starlark.Value) (*starlark.Function, error) {
 func NewAssertMin(minimum starlark.Value) *starlark.Function {
 	minimumFunc, err := assertMinimum(minimum)
 	if err != nil {
-		// TODO: consider whether to return "err" instead of panicing
+		// TODO: consider whether to return "err" instead of panicking
 		// - minimum is technically supplied by the user
 		// - under what conditions does assertMinimum() produce an error?
 		// - do any of those conditions occur *because* of the user input?
@@ -289,30 +289,59 @@ func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args sta
 	return result, nil
 }
 
-func newMaxStarlarkFunc(max int) core.StarlarkFunc {
-	return func(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		if args.Len() != 1 {
-			return starlark.None, fmt.Errorf("expected exactly one argument")
-		}
-		val := args[0]
-		v, err := starlark.NumberToInt(val)
-		if err != nil {
-			return starlark.None, fmt.Errorf("expected value to be an number, but was %s", val.Type())
-		}
-		num, _ := v.Int64()
-		intNum := int(num)
-		if intNum <= max {
-			return starlark.None, nil
-		} else {
-			return starlark.None, fmt.Errorf("value was more than %v", max)
-		}
+// assertMaximum produces a higher-order Starlark function that asserts that a given value is less than or equal to "maximum".
+//
+// see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
+func assertMaximum(maximum starlark.Value) (*starlark.Function, error) {
+	src := `lambda value: fail("{} is more than {}".format(value, maximum)) if value > maximum else None`
+	expr, err := syntax.ParseExpr("@ytt:assert.max()", src, syntax.BlockScanner)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
 	}
+	thread := &starlark.Thread{Name: "ytt-internal"}
+
+	evalExpr, err := starlark.EvalExpr(thread, expr, starlark.StringDict{"maximum": maximum})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to invoke @ytt:assert.max(%v) :%s", maximum, err)
+	}
+	return evalExpr.(*starlark.Function), nil
 }
-func NewAssertMax(max int) starlark.Callable {
-	return starlark.NewBuiltin("assert.max", core.ErrWrapper(newMaxStarlarkFunc(max)))
+
+// NewAssertMax produces a higher-order Starlark function that asserts that a given value is less than or equal to "maximum"
+func NewAssertMax(maximum starlark.Value) *starlark.Function {
+	maximumFunc, err := assertMinimum(maximum)
+	if err != nil {
+		// TODO: consider whether to return "err" instead of panicking
+		// - maximum is technically supplied by the user
+		// - under what conditions does assertMaximum() produce an error?
+		// - do any of those conditions occur *because* of the user input?
+		panic(fmt.Sprintf("failed to build assertmaximum(): %s", err))
+	}
+	return maximumFunc
 }
+
+// Max is a core.StarlarkFunc that asserts that a given value is less than or equal to a given maximum.
 func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	return starlark.None, nil
+	if len(args) == 0 {
+		return starlark.None, fmt.Errorf("expected at least one argument.")
+	}
+	if len(args) > 2 {
+		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
+	}
+
+	maxFunc, err := assertMaximum(args[0])
+	if err != nil {
+		return starlark.None, err
+	}
+	if len(args) == 1 {
+		return maxFunc, nil
+	}
+
+	result, err := starlark.Call(thread, maxFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
+	if err != nil {
+		return starlark.None, err
+	}
+	return result, nil
 }
 
 func newNotNullStarlarkFunc() core.StarlarkFunc {

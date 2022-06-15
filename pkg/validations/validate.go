@@ -34,7 +34,7 @@ type validationKwargs struct {
 	minLength    int   // 0 len("") == 0, this always passes
 	maxLength    *int
 	min          starlark.Value
-	max          *int
+	max          starlark.Value
 	notNull      bool
 	// *int , default=nil possible_values={&1, &2, &-3, ..}
 }
@@ -176,9 +176,9 @@ func (v validationKwargs) convertToRules() []rule {
 		})
 	}
 	if v.max != nil {
-		a := yttlibrary.NewAssertMax(*v.max)
+		a := yttlibrary.NewAssertMax(v.max)
 		rules = append(rules, rule{
-			msg:       fmt.Sprintf("a value less than or equal to %v", *v.max),
+			msg:       fmt.Sprintf("a value less than or equal to %v", v.max),
 			assertion: a,
 		})
 	}
