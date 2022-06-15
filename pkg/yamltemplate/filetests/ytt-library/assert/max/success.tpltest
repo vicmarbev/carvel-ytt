@@ -16,7 +16,7 @@ max_of_list:
 +++
 
 max_of_int:
-  as_validation_assertion: null
+  as_validation_assertion: true
   as_plain_func: null
 max_of_float:
   as_validation_assertion: null
