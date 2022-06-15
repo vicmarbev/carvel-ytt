@@ -309,13 +309,13 @@ func assertMaximum(maximum starlark.Value) (*starlark.Function, error) {
 
 // NewAssertMax produces a higher-order Starlark function that asserts that a given value is less than or equal to "maximum"
 func NewAssertMax(maximum starlark.Value) *starlark.Function {
-	maximumFunc, err := assertMinimum(maximum)
+	maximumFunc, err := assertMaximum(maximum)
 	if err != nil {
 		// TODO: consider whether to return "err" instead of panicking
 		// - maximum is technically supplied by the user
 		// - under what conditions does assertMaximum() produce an error?
 		// - do any of those conditions occur *because* of the user input?
-		panic(fmt.Sprintf("failed to build assertmaximum(): %s", err))
+		panic(fmt.Sprintf("failed to build assert.max(): %s", err))
 	}
 	return maximumFunc
 }
