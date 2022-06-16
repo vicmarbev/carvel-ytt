@@ -157,37 +157,57 @@ func (v validationKwargs) convertToRules() []rule {
 	var rules []rule
 	if minLen := v.minLength; minLen > 0 {
 		a := yttlibrary.NewAssertMinLen(core.NewGoValue(minLen).AsStarlarkValue())
+		check, err := a.Attr("check")
+		if err != nil {
+			panic(err)
+		}
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("length greater or equal to %v", minLen),
-			assertion: a,
+			assertion: check.(*starlark.Function),
 		})
 	}
 	if v.maxLength != nil {
 		a := yttlibrary.NewAssertMaxLen(core.NewGoValue(*v.maxLength).AsStarlarkValue())
+		check, err := a.Attr("check")
+		if err != nil {
+			panic(err)
+		}
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("length less than or equal to %v", *v.maxLength),
-			assertion: a,
+			assertion: check.(*starlark.Function),
 		})
 	}
 	if v.min != nil {
 		a := yttlibrary.NewAssertMin(v.min)
+		check, err := a.Attr("check")
+		if err != nil {
+			panic(err)
+		}
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("a value greater or equal to %v", v.min),
-			assertion: a,
+			assertion: check.(*starlark.Function),
 		})
 	}
 	if v.max != nil {
 		a := yttlibrary.NewAssertMax(v.max)
+		check, err := a.Attr("check")
+		if err != nil {
+			panic(err)
+		}
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("a value less than or equal to %v", v.max),
-			assertion: a,
+			assertion: check.(*starlark.Function),
 		})
 	}
 	if v.notNull {
 		a := yttlibrary.NewAssertNotNull()
+		check, err := a.Attr("check")
+		if err != nil {
+			panic(err)
+		}
 		rules = append(rules, rule{
 			msg:       fmt.Sprintf("not null"),
-			assertion: a,
+			assertion: check.(*starlark.Function),
 		})
 	}
 

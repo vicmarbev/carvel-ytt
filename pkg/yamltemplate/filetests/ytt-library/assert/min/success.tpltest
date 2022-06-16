@@ -6,18 +6,18 @@
 #@ end
 ---
 
-min_of_bool: #@ assert.min(False)(True)
-min_of_int: #@ assert.min(1)(2)
-min_of_float: #@ assert.min(1.1)(1.2)
-min_of_string: #@ assert.min("a")("b")
+min_of_bool: #@ assert.min(False).check(True)
+min_of_int: #@ assert.min(1).check(2)
+min_of_float: #@ assert.min(1.1).check(1.2)
+min_of_string: #@ assert.min("a").check("b")
 min_of_list:
-  array: #@ assert.min(["a", 1])(array())
-  list: #@ assert.min(["a", 1])(["a", 2])
-  tuple: #@ assert.min(["a", 1])(("a", 2))
+  array: #@ assert.min(["a", 1]).check(array())
+  list: #@ assert.min(["a", 1]).check(["a", 2])
+  tuple: #@ assert.min(["a", 1]).check(("a", 2))
 min_of_array:
-  array: #@ assert.min(array(), array())
-  list: #@ assert.min(array(), ["a", 2])
-  tuple: #@ assert.min(array(), ("a", 2))
+  array: #@ assert.min(array()).check(array())
+  list: #@ assert.min(array()).check(["a", 2])
+  tuple: #@ assert.min(array()).check(("a", 2))
 
 +++
 
