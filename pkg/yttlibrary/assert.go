@@ -109,24 +109,31 @@ func (b assertModule) TryTo(thread *starlark.Thread, f *starlark.Builtin, args s
 	return starlark.Tuple{retVal, starlark.None}, nil
 }
 
-// NewAssertMaxLen produces a higher-order Starlark function that asserts that a given sequence is at most
-// "maximum" in length.
-//
-// see also: https://github.com/google/starlark-go/blob/master/doc/spec.md#len
-func NewAssertMaxLen(maximum starlark.Value) *starlark.Function {
-	src := `lambda sequence: fail("length of {} is more than {}".format(len(sequence), maximum)) if len(sequence) > maximum else None`
-	expr, err := syntax.ParseExpr("@ytt:assert.max_len()", src, syntax.BlockScanner)
+func newAssertFunc(funcName, src, argName string, arg starlark.Value) *starlark.Function {
+	expr, err := syntax.ParseExpr(funcName, src, syntax.BlockScanner)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
 	}
 	thread := &starlark.Thread{Name: "ytt-internal"}
 
-	env := starlark.StringDict{"maximum": maximum}
+	env := starlark.StringDict{argName: arg}
 	evalExpr, err := starlark.EvalExpr(thread, expr, env)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to evaluate internal expression (%s) given env=%s", src, env))
 	}
 	return evalExpr.(*starlark.Function)
+}
+
+// NewAssertMaxLen produces a higher-order Starlark function that asserts that a given sequence is at most
+// "maximum" in length.
+//
+// see also: https://github.com/google/starlark-go/blob/master/doc/spec.md#len
+func NewAssertMaxLen(maximum starlark.Value) *starlark.Function {
+	return newAssertFunc(
+		"assert.max_len",
+		`lambda sequence: fail("length of {} is more than {}".format(len(sequence), maximum)) if len(sequence) > maximum else None`,
+		"maximum", maximum,
+	)
 }
 
 // MaxLength is a core.StarlarkFunc that asserts that a given sequence is at most a given maximum length.
@@ -159,19 +166,11 @@ func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, ar
 //
 // see also: https://github.com/google/starlark-go/blob/master/doc/spec.md#len
 func NewAssertMinLen(minimum starlark.Value) *starlark.Function {
-	src := `lambda sequence: fail("length of {} is less than {}".format(len(sequence), minimum)) if len(sequence) < minimum else None`
-	expr, err := syntax.ParseExpr("@ytt:assert.min_len()", src, syntax.BlockScanner)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
-	}
-	thread := &starlark.Thread{Name: "ytt-internal"}
-
-	env := starlark.StringDict{"minimum": minimum}
-	evalExpr, err := starlark.EvalExpr(thread, expr, env)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to evaluate internal expression (%s) given env=%s", src, env))
-	}
-	return evalExpr.(*starlark.Function)
+	return newAssertFunc(
+		"assert.min_len",
+		`lambda sequence: fail("length of {} is less than {}".format(len(sequence), minimum)) if len(sequence) < minimum else None`,
+		"minimum", minimum,
+	)
 }
 
 // MinLength is a core.StarlarkFunc that asserts that a given sequence is at least a given minimum length.
@@ -203,19 +202,11 @@ func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, ar
 //
 // see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
 func NewAssertMin(minimum starlark.Value) *starlark.Function {
-	src := `lambda value: fail("{} is less than {}".format(value, minimum)) if value < minimum else None`
-	expr, err := syntax.ParseExpr("@ytt:assert.min()", src, syntax.BlockScanner)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
-	}
-	thread := &starlark.Thread{Name: "ytt-internal"}
-
-	env := starlark.StringDict{"minimum": minimum}
-	evalExpr, err := starlark.EvalExpr(thread, expr, env)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to evaluate internal expression (%s) given env=%s", src, env))
-	}
-	return evalExpr.(*starlark.Function)
+	return newAssertFunc(
+		"assert.min",
+		`lambda value: fail("{} is less than {}".format(value, minimum)) if value < minimum else None`,
+		"minimum", minimum,
+	)
 }
 
 // Min is a core.StarlarkFunc that asserts that a given value is at least a given minimum.
@@ -243,19 +234,11 @@ func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args sta
 //
 // see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
 func NewAssertMax(maximum starlark.Value) *starlark.Function {
-	src := `lambda value: fail("{} is more than {}".format(value, maximum)) if value > maximum else None`
-	expr, err := syntax.ParseExpr("@ytt:assert.max()", src, syntax.BlockScanner)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
-	}
-	thread := &starlark.Thread{Name: "ytt-internal"}
-
-	env := starlark.StringDict{"maximum": maximum}
-	evalExpr, err := starlark.EvalExpr(thread, expr, env)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to evaluate internal expression (%s) given env=%s", src, env))
-	}
-	return evalExpr.(*starlark.Function)
+	return newAssertFunc(
+		"assert.max",
+		`lambda value: fail("{} is more than {}".format(value, maximum)) if value > maximum else None`,
+		"maximum", maximum,
+	)
 }
 
 // Max is a core.StarlarkFunc that asserts that a given value is less than or equal to a given maximum.
