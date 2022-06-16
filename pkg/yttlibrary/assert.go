@@ -117,8 +117,10 @@ type Assertion struct {
 
 const assertionTypeName = "assert.assertion"
 
+// Type reports the name of this type in the Starlark type system.
 func (a *Assertion) Type() string { return "@ytt:" + assertionTypeName }
 
+// CheckFunc returns the function that — given a value — makes this assertion on it.
 func (a *Assertion) CheckFunc() starlark.Callable {
 	return a.check
 }
@@ -158,10 +160,10 @@ func NewAssertMaxLen(maximum starlark.Value) *Assertion {
 // MaxLength is a core.StarlarkFunc that asserts that a given sequence is at most a given maximum length.
 func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument.")
+		return starlark.None, fmt.Errorf("expected at least one argument")
 	}
 	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
+		return starlark.None, fmt.Errorf("expected at no more than two arguments")
 	}
 
 	max := args[0]
@@ -195,10 +197,10 @@ func NewAssertMinLen(minimum starlark.Value) *Assertion {
 // MinLength is a core.StarlarkFunc that asserts that a given sequence is at least a given minimum length.
 func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument.")
+		return starlark.None, fmt.Errorf("expected at least one argument")
 	}
 	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
+		return starlark.None, fmt.Errorf("expected at no more than two arguments")
 	}
 
 	min := args[0]
@@ -231,10 +233,10 @@ func NewAssertMin(minimum starlark.Value) *Assertion {
 // Min is a core.StarlarkFunc that asserts that a given value is at least a given minimum.
 func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument.")
+		return starlark.None, fmt.Errorf("expected at least one argument")
 	}
 	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
+		return starlark.None, fmt.Errorf("expected at no more than two arguments")
 	}
 
 	minFunc := NewAssertMin(args[0])
@@ -263,10 +265,10 @@ func NewAssertMax(maximum starlark.Value) *Assertion {
 // Max is a core.StarlarkFunc that asserts that a given value is less than or equal to a given maximum.
 func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument.")
+		return starlark.None, fmt.Errorf("expected at least one argument")
 	}
 	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments.")
+		return starlark.None, fmt.Errorf("expected at most two arguments")
 	}
 
 	maxFunc := NewAssertMax(args[0])
@@ -281,6 +283,7 @@ func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args sta
 	return result, nil
 }
 
+// NewAssertNotNull produces an assertion object that asserts that a given value is not null.
 func NewAssertNotNull() *Assertion {
 	return NewAssertion(
 		"assert.not_null",
@@ -289,6 +292,7 @@ func NewAssertNotNull() *Assertion {
 	)
 }
 
+// NotNull is a core.StarlarkFunc that asserts that a given value is not null.
 func (b assertModule) NotNull(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	return NewAssertNotNull(), nil
 }
