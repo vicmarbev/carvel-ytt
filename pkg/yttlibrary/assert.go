@@ -159,11 +159,8 @@ func NewAssertMaxLen(maximum starlark.Value) *Assertion {
 
 // MaxLength is a core.StarlarkFunc that asserts that a given sequence is at most a given maximum length.
 func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument")
-	}
-	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments")
+	if args.Len() != 1 {
+		return starlark.None, fmt.Errorf("expected exactly one argument")
 	}
 
 	max := args[0]
@@ -171,15 +168,7 @@ func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, ar
 		return starlark.None, fmt.Errorf("expected value to be an number, but was %s", max.Type())
 	}
 	maxLenFunc := NewAssertMaxLen(args[0])
-	if len(args) == 1 {
-		return maxLenFunc, nil
-	}
-
-	result, err := starlark.Call(thread, maxLenFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
-	if err != nil {
-		return starlark.None, err
-	}
-	return result, nil
+	return maxLenFunc, nil
 }
 
 // NewAssertMinLen produces an assertion object that asserts that a given sequence is at least
@@ -196,11 +185,8 @@ func NewAssertMinLen(minimum starlark.Value) *Assertion {
 
 // MinLength is a core.StarlarkFunc that asserts that a given sequence is at least a given minimum length.
 func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument")
-	}
-	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments")
+	if args.Len() != 1 {
+		return starlark.None, fmt.Errorf("expected exactly one argument")
 	}
 
 	min := args[0]
@@ -208,15 +194,7 @@ func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, ar
 		return starlark.None, fmt.Errorf("expected value to be an number, but was %s", min.Type())
 	}
 	minLengthFunc := NewAssertMinLen(min)
-	if len(args) == 1 {
-		return minLengthFunc, nil
-	}
-
-	result, err := starlark.Call(thread, minLengthFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
-	if err != nil {
-		return starlark.None, err
-	}
-	return result, nil
+	return minLengthFunc, nil
 }
 
 // NewAssertMin produces an assertion object that asserts that a given value is at least "minimum".
@@ -232,23 +210,12 @@ func NewAssertMin(minimum starlark.Value) *Assertion {
 
 // Min is a core.StarlarkFunc that asserts that a given value is at least a given minimum.
 func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument")
-	}
-	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at no more than two arguments")
+	if args.Len() != 1 {
+		return starlark.None, fmt.Errorf("expected exactly one argument")
 	}
 
 	minFunc := NewAssertMin(args[0])
-	if len(args) == 1 {
-		return minFunc, nil
-	}
-
-	result, err := starlark.Call(thread, minFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
-	if err != nil {
-		return starlark.None, err
-	}
-	return result, nil
+	return minFunc, nil
 }
 
 // NewAssertMax produces an assertion object that asserts that a given value is less than or equal to "maximum".
@@ -264,23 +231,12 @@ func NewAssertMax(maximum starlark.Value) *Assertion {
 
 // Max is a core.StarlarkFunc that asserts that a given value is less than or equal to a given maximum.
 func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	if len(args) == 0 {
-		return starlark.None, fmt.Errorf("expected at least one argument")
-	}
-	if len(args) > 2 {
-		return starlark.None, fmt.Errorf("expected at most two arguments")
+	if args.Len() != 1 {
+		return starlark.None, fmt.Errorf("expected exactly one argument")
 	}
 
 	maxFunc := NewAssertMax(args[0])
-	if len(args) == 1 {
-		return maxFunc, nil
-	}
-
-	result, err := starlark.Call(thread, maxFunc, starlark.Tuple{args[1]}, []starlark.Tuple{})
-	if err != nil {
-		return starlark.None, err
-	}
-	return result, nil
+	return maxFunc, nil
 }
 
 // NewAssertNotNull produces an assertion object that asserts that a given value is not null.
