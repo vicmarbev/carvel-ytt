@@ -275,8 +275,12 @@ func newNotNullStarlarkFunc() core.StarlarkFunc {
 		return starlark.None, nil
 	}
 }
-func NewAssertNotNull() starlark.Callable {
-	return starlark.NewBuiltin("assert.not_null", core.ErrWrapper(newNotNullStarlarkFunc()))
+func NewAssertNotNull() *starlark.Function {
+	return newAssertFunc(
+		"assert.not_null",
+		`lambda value: fail("value is null") if value == None else None`,
+		"", starlark.None,
+	)
 }
 func (b assertModule) NotNull(thread *starlark.Thread, f *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	return starlark.None, nil
