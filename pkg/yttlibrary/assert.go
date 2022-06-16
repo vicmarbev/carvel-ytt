@@ -6,10 +6,10 @@ package yttlibrary
 import (
 	"fmt"
 
-	"github.com/k14s/starlark-go/syntax"
-
 	"github.com/k14s/starlark-go/starlark"
 	"github.com/k14s/starlark-go/starlarkstruct"
+	"github.com/k14s/starlark-go/syntax"
+	"github.com/vmware-tanzu/carvel-ytt/pkg/orderedmap"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/template/core"
 )
 
@@ -109,11 +109,22 @@ func (b assertModule) TryTo(thread *starlark.Thread, f *starlark.Builtin, args s
 	return starlark.Tuple{retVal, starlark.None}, nil
 }
 
-// newAssertObj creates a struct with one attribute: "check" that contains the assertion defined by "src".
-func newAssertObj(funcName, src string, env starlark.StringDict) *core.StarlarkStruct {
-	src = "struct.make(check=" + src + ")"
-	env["struct"] = StructAPI["struct"]
+// Assertion encapsulates a specific assertion, ready to be checked against any number of values.
+type Assertion struct {
+	check starlark.Callable
+	*core.StarlarkStruct
+}
 
+const assertionTypeName = "assert.assertion"
+
+func (a *Assertion) Type() string { return "@ytt:" + assertionTypeName }
+
+func (a *Assertion) CheckFunc() starlark.Callable {
+	return a.check
+}
+
+// NewAssertion creates a struct with one attribute: "check" that contains the assertion defined by "src".
+func NewAssertion(funcName, src string, env starlark.StringDict) *Assertion {
 	expr, err := syntax.ParseExpr(funcName, src, syntax.BlockScanner)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to parse internal expression (%s) :%s", src, err))
@@ -124,15 +135,20 @@ func newAssertObj(funcName, src string, env starlark.StringDict) *core.StarlarkS
 	if err != nil {
 		panic(fmt.Sprintf("Failed to evaluate internal expression (%s) given env=%s", src, env))
 	}
-	return evalExpr.(*core.StarlarkStruct)
+
+	a := &Assertion{check: evalExpr.(*starlark.Function)}
+	m := orderedmap.NewMap()
+	m.Set("check", a.check)
+	a.StarlarkStruct = core.NewStarlarkStruct(m)
+	return a
 }
 
 // NewAssertMaxLen produces an assertion object that asserts that a given sequence is at most
 // "maximum" in length.
 //
 // see also: https://github.com/google/starlark-go/blob/master/doc/spec.md#len
-func NewAssertMaxLen(maximum starlark.Value) *core.StarlarkStruct {
-	return newAssertObj(
+func NewAssertMaxLen(maximum starlark.Value) *Assertion {
+	return NewAssertion(
 		"assert.max_len",
 		`lambda sequence: fail("length of {} is more than {}".format(len(sequence), maximum)) if len(sequence) > maximum else None`,
 		starlark.StringDict{"maximum": maximum},
@@ -168,8 +184,8 @@ func (b assertModule) MaxLength(thread *starlark.Thread, f *starlark.Builtin, ar
 // "minimum" in length.
 //
 // see also: https://github.com/google/starlark-go/blob/master/doc/spec.md#len
-func NewAssertMinLen(minimum starlark.Value) *core.StarlarkStruct {
-	return newAssertObj(
+func NewAssertMinLen(minimum starlark.Value) *Assertion {
+	return NewAssertion(
 		"assert.min_len",
 		`lambda sequence: fail("length of {} is less than {}".format(len(sequence), minimum)) if len(sequence) < minimum else None`,
 		starlark.StringDict{"minimum": minimum},
@@ -204,8 +220,8 @@ func (b assertModule) MinLength(thread *starlark.Thread, f *starlark.Builtin, ar
 // NewAssertMin produces an assertion object that asserts that a given value is at least "minimum".
 //
 // see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
-func NewAssertMin(minimum starlark.Value) *core.StarlarkStruct {
-	return newAssertObj(
+func NewAssertMin(minimum starlark.Value) *Assertion {
+	return NewAssertion(
 		"assert.min",
 		`lambda value: fail("{} is less than {}".format(value, minimum)) if yaml.decode(yaml.encode(value)) < yaml.decode(yaml.encode(minimum)) else None`,
 		starlark.StringDict{"minimum": minimum, "yaml": YAMLAPI["yaml"]},
@@ -236,8 +252,8 @@ func (b assertModule) Min(thread *starlark.Thread, f *starlark.Builtin, args sta
 // NewAssertMax produces an assertion object that asserts that a given value is less than or equal to "maximum".
 //
 // see also:https://github.com/google/starlark-go/blob/master/doc/spec.md#comparisons
-func NewAssertMax(maximum starlark.Value) *core.StarlarkStruct {
-	return newAssertObj(
+func NewAssertMax(maximum starlark.Value) *Assertion {
+	return NewAssertion(
 		"assert.max",
 		`lambda value: fail("{} is more than {}".format(value, maximum)) if yaml.decode(yaml.encode(value)) > yaml.decode(yaml.encode(maximum)) else None`,
 		starlark.StringDict{"maximum": maximum, "yaml": YAMLAPI["yaml"]},
@@ -265,8 +281,8 @@ func (b assertModule) Max(thread *starlark.Thread, f *starlark.Builtin, args sta
 	return result, nil
 }
 
-func NewAssertNotNull() *core.StarlarkStruct {
-	return newAssertObj(
+func NewAssertNotNull() *Assertion {
+	return NewAssertion(
 		"assert.not_null",
 		`lambda value: fail("value is null") if value == None else None`,
 		starlark.StringDict{},
